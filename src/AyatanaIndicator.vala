@@ -321,8 +321,15 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             }
             button = new Gtk.ModelButton();
             button.text=label;
+            var hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 3);
 			if (image != null && image.pixbuf != null) {
-                button.icon= (image.pixbuf);
+				var img= new Gtk.Image.from_pixbuf(image.pixbuf);
+				
+				hbox.spacing = 6;
+				hbox.add(button);
+				hbox.add(img);
+				//Modelbutton = text OR icon not both
+                //button.icon= (image.pixbuf);
             } 
             if (item_type == ATK_RADIO) {
 				button.role=Gtk.ButtonRole.RADIO;
@@ -393,7 +400,9 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
             connect_signals (item, button);
 
-            return button;
+            if ((image != null && image.pixbuf != null)) {
+				return hbox;}
+            else {return button;}
         }
 
         return null;
