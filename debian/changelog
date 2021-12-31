@@ -1,4 +1,17 @@
-com.github.lafydev.wingpanel-indicator-ayatana (2.0.8) focal; urgency=medium
+wingpanel-indicator-ayatana (2.0.8ubuntu2) unstable; urgency=medium
+
+  * remove useless deb, modify for button press 
+  * add indicator-application dep 
+
+ -- leixiaoan <leixa@jideos.com>  Fri, 31 Dec 2021 16:40:48 +0800
+
+wingpanel-indicator-ayatana (2.0.8ubuntu1) unstable; urgency=medium
+
+  * init for patapua os
+
+ -- leixiaoan <leixa@jideos.com>  Thu, 30 Dec 2021 11:02:02 +0800
+
+wingpanel-indicator-ayatana (2.0.8) focal; urgency=medium
 
  [ lafy ]
   * New release : fix image issue #21 

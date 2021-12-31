@@ -73,16 +73,17 @@ namespace IndicatorAyatana {
 	[CCode (cheader_filename = "libindicator/indicator-object.h")]
 	[Compact]
 	public class ObjectEntry {
-		public weak string accessible_desc;
-		public weak Gtk.Image image;
-		public weak Gtk.Label label;
-		public weak Gtk.Menu menu;
-		public weak string name_hint;
 		public weak IndicatorAyatana.Object parent_object;
+		public weak Gtk.Label label;
+		public weak Gtk.Image image;
+		public weak Gtk.Menu menu;
+		public weak string accessible_desc;
+		public weak string name_hint;
+		public uint parent_window;
 		public static void activate (IndicatorAyatana.Object io, IndicatorAyatana.ObjectEntry entry, uint timestamp);
 		public static void activate_window (IndicatorAyatana.Object io, IndicatorAyatana.ObjectEntry entry, uint windowid, uint timestamp);
 		public static void close (IndicatorAyatana.Object io, IndicatorAyatana.ObjectEntry entry, uint timestamp);
-		public static bool is_visible (IndicatorAyatana.Object io, IndicatorAyatana.ObjectEntry entry);
+		//  public static bool is_visible (IndicatorAyatana.Object io, IndicatorAyatana.ObjectEntry entry);
 	}
 	[CCode (cheader_filename = "libindicator/indicator-service.h", type_check_function = "INDICATOR_IS_SERVICE", type_id = "indicator_service_get_type ()")]
 	public class Service : GLib.Object {

@@ -115,7 +115,10 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     public bool on_button_press (Gdk.EventButton event) {
         if (event.button == Gdk.BUTTON_MIDDLE) {
             parent_object.secondary_activate (entry, event.time);
-
+            return Gdk.EVENT_STOP;
+        }
+        else if (event.button == Gdk.BUTTON_PRIMARY) {
+            entry.parent_object.entry_activate (entry, event.time);
             return Gdk.EVENT_STOP;
         }
 

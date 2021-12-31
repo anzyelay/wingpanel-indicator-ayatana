@@ -77,13 +77,17 @@ public class AyatanaCompatibility.MetaIndicator : Wingpanel.Indicator {
         GLib.Timeout.add(250, () => {
             // If there are any unrealized widgets, we need to keep waiting.
             foreach (Wingpanel.Indicator indicator in Wingpanel.IndicatorManager.get_default ().get_indicators ()) {
-                if (indicator.visible && indicator.get_display_widget ().get_realized () == false) return true;
+                if (indicator.visible && indicator.get_display_widget ().get_realized () == false) {
+                    return true;
+                }
             }
 
             // Have all indicator display widgets resize themselves later.
             // This fixes the bluetooth indicator having zero width.
             foreach (Wingpanel.Indicator indicator in Wingpanel.IndicatorManager.get_default ().get_indicators ()) {
-                if (indicator.visible) indicator.get_display_widget ().queue_resize ();
+                if (indicator.visible) {
+                    indicator.get_display_widget ().queue_resize ();
+                }
             }
 
             // Register the deferred indicators.

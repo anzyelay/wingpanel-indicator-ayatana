@@ -1,7 +1,7 @@
-Source: com.github.lafydev.wingpanel-indicator-ayatana
+Source: wingpanel-indicator-ayatana
 Section: x11
 Priority: optional
-Maintainer: Lafydev <lafy@mailo.com>
+Maintainer: patapua team <leixa@jideos.com>
 Build-Depends: debhelper (>= 11),
                libglib2.0-dev,
                libgranite-dev,
@@ -12,9 +12,9 @@ Build-Depends: debhelper (>= 11),
                valac (>= 0.40.0)
 Standards-Version: 4.1.4
 
-Package: com.github.lafydev.wingpanel-indicator-ayatana
+Package: wingpanel-indicator-ayatana
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Enhances: wingpanel
+Enhances: wingpanel, indicator-application(>= 13)
 Description: WingPanel Ayatana Indicator
  this brings compatibility with Ayatana Indicator
