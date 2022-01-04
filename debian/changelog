@@ -1,7 +1,7 @@
 wingpanel-indicator-ayatana (2.0.8ubuntu2) unstable; urgency=medium
 
   * remove useless deb, modify for button press 
-  * add indicator-application dep 
+  * change dependency indicator-application wingpanel
 
  -- leixiaoan <leixa@jideos.com>  Fri, 31 Dec 2021 16:40:48 +0800
 

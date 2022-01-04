@@ -14,7 +14,8 @@ Standards-Version: 4.1.4
 
 Package: wingpanel-indicator-ayatana
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
-Enhances: wingpanel(>=3.0.126), indicator-application(>= 13)
+Depends: ${misc:Depends}, ${shlibs:Depends},
+		wingpanel(>=3.0.126),
+		indicator-application(>= 13)
 Description: WingPanel Ayatana Indicator
  this brings compatibility with Ayatana Indicator
