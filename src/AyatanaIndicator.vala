@@ -122,6 +122,11 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             return Gdk.EVENT_STOP;
         }
 
+        else if (event.button == Gdk.BUTTON_SECONDARY) {
+            entry.menu.popup_at_widget(icon.parent,0,0);
+            return Gdk.EVENT_STOP;
+        }
+
         return Gdk.EVENT_PROPAGATE;
     }
 
