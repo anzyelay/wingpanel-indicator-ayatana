@@ -1,3 +1,9 @@
+wingpanel-indicator-ayatana (2.0.8ubuntu4) UNRELEASED; urgency=medium
+
+  * use gtkmenu to show dbus menu. move popup menu to wingpanel 
+
+ -- leixiaoan <leixa@jideos.com>  Wed, 05 Jan 2022 17:32:06 +0800
+
 wingpanel-indicator-ayatana (2.0.8ubuntu3) unstable; urgency=medium
 
   * use gtk.menu to display right menu 
