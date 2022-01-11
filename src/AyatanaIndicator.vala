@@ -21,7 +21,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     private IndicatorButton icon;
 
     private Gtk.Stack main_stack;
-    private Gtk.ListBox main_list;
+    private Wingpanel.IndicatorGrid main_grid;
 
     private unowned IndicatorAyatana.ObjectEntry entry;
     private unowned IndicatorAyatana.Object parent_object;
@@ -36,6 +36,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     
 	//grouping radio buttons
 	private Gtk.RadioButton? group_radio=null ;
+	private Gtk.ModelButton? group_action=null;
 	
     public Indicator (IndicatorAyatana.ObjectEntry entry, IndicatorAyatana.Object obj, IndicatorIface indicator) {
         string name_hint = entry.name_hint;
@@ -50,6 +51,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         this.indicator = indicator;
         this.parent_object = obj;
         this.menu_map = new Gee.HashMap<Gtk.Widget, Gtk.Widget> ();
+        this.submenu_map = new Gee.HashMap<Gtk.Widget, Gtk.Widget> ();
         entry_name_hint = name_hint;
 
         if (entry.menu == null) {
@@ -122,10 +124,10 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             return Gdk.EVENT_STOP;
         }
 
-        else if (event.button == Gdk.BUTTON_SECONDARY) {
-            entry.menu.popup_at_widget(icon.parent,0,0);
-            return Gdk.EVENT_STOP;
-        }
+        //  else if (event.button == Gdk.BUTTON_SECONDARY) {
+        //      entry.menu.popup_at_widget(icon.parent,0,0);
+        //      return Gdk.EVENT_STOP;
+        //  }
 
         return Gdk.EVENT_PROPAGATE;
     }
@@ -155,32 +157,48 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             });
 
             main_stack = new Gtk.Stack ();
+            main_stack.vhomogeneous = false;
             main_stack.map.connect (() => {
 				//reload: open first on main_list
-                main_stack.set_visible_child (main_list);
+                main_stack.set_visible_child (main_grid);
                 reloaded = false;
             });
-            main_list = new Gtk.ListBox();
-            main_list.set_size_request(230,-1);
-            main_stack.add (main_list);
+            main_grid = new Wingpanel.IndicatorGrid ();
+            main_stack.add (main_grid);
 
-            foreach (var item in entry.menu.get_children ()) {
-                on_menu_widget_insert (item);
-            }
+            menu_layout_parse (entry.menu, main_grid, menu_map);
 
-            entry.menu.insert.connect (on_menu_widget_insert);
-            entry.menu.remove.connect (on_menu_widget_remove);
         }
 
         return main_stack;
     }
 
-    private void on_menu_widget_insert (Gtk.Widget item) {
-        var w = convert_menu_widget (item);
+    private void menu_layout_parse (Gtk.Menu menu, 
+                                        Gtk.Container container=main_grid,
+                                        Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap=menu_map) {
+        foreach (var item in menu.get_children ()) {
+            on_menu_widget_insert (item, container, hashmap);
+        }
 
+        menu.insert.connect ((e)=>{
+            on_menu_widget_insert (e, container, hashmap);
+        });
+        menu.remove.connect ( (e)=>{
+            on_menu_widget_remove (e, container, hashmap);
+        });
+    }
+
+    private void on_menu_widget_insert (Gtk.Widget item,
+                                        Gtk.Container container,
+                                        Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap) {
+        var w = convert_menu_widget (item);
         if (w != null) {
-            menu_map.set (item, w);
-            main_list.add (w);
+            on_menu_widget_remove (item, container, hashmap);
+            hashmap.set (item, w);
+            container.add (w);
+            //  if (w is Gtk.ModelButton) {
+                //  warning ("add widget :%s 0x%lx", ((Gtk.ModelButton)w).text,  (long)w);
+            //  }
             /* menuitem not visible */
             if (!item.get_visible ()) {
                 w.no_show_all = true;
@@ -191,24 +209,34 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         }
     }
 
-    private void on_menu_widget_remove (Gtk.Widget item) {
-        var w = menu_map.get (item);
+    private void on_menu_widget_remove (Gtk.Widget item, 
+                                        Gtk.Container container,
+                                        Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap) {
+        var w = hashmap.get (item);
 
         if (w != null) {
-            main_list.remove (w);
-            menu_map.unset (item);
+            if (w is Gtk.ModelButton) {
+                warning ("remove widget :%s 0x%lx", ((Gtk.ModelButton)w).text, (long)w);
+            }
+            if (!(w is Gtk.Widget)) {
+                warning ("remove not a  widget =========:%s 0x%lx", ((Gtk.Button)w).label, (long)w);
+            }
+            container.remove (w);
+            hashmap.unset (item);
         }
     }
 
-    private Gtk.Image? check_for_image (Gtk.Container container) {
-        foreach (var c in container.get_children ()) {
-            if (c is Gtk.Image) {
-                return (c as Gtk.Image);
-            } else if (c is Gtk.Container) {
-                return check_for_image ((c as Gtk.Container));
+    private Gtk.Image? check_for_image (Gtk.Widget widget) {
+        if (widget is Gtk.Image) {
+            return widget as Gtk.Image;
+        }
+        else if (widget is Gtk.Container) {
+            foreach (var c in ((Gtk.Container)widget).get_children ()) {
+                var image = check_for_image (c);
+                if (image != null)
+                    return image;
             }
         }
-
         return null;
     }
 
@@ -224,101 +252,109 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 		item.state_flags_changed.connect  ((type) => {
            button.set_state_flags (item.get_state_flags (),true);
         });
+        if (item is Gtk.MenuItem && button is Gtk.Button) {
+            ((Gtk.MenuItem)item).notify["label"].connect (() => {
+                ((Gtk.Button)button).label = ((Gtk.MenuItem)item).get_label ().replace ("_", "");
+            });
+        }
     }
 
     /* convert the menuitems to widgets that can be shown in popovers */
-    private Gtk.Widget? convert_menu_widget (Gtk.Widget item) {
+    private Gtk.Widget? convert_menu_widget (Gtk.Widget widget) {
+        var item = widget as Gtk.MenuItem;
+        if (item == null) {
+            return null;
+        }
+
         /* separator are GTK.SeparatorMenuItem, return a separator */
         if (item is Gtk.SeparatorMenuItem) {
-            var separator =  new Gtk.Separator (Gtk.Orientation.HORIZONTAL);
-
-            connect_signals (item, separator);
 			group_radio = null; 
+            var separator =  new Gtk.Separator (Gtk.Orientation.HORIZONTAL);
+            connect_signals (item, separator);
             return separator;
         }
 
-        /* all other items are genericmenuitems */
-		string label = ((Gtk.MenuItem)item).get_label ();
-    	label = label.replace ("_", "");
-		
-        /*
-         * get item type from atk accessibility
-         * 34 = MENU_ITEM  8 = CHECKBOX  32 = SUBMENU 44 = RADIO
+        /* all other items are genericmenuitems 
+         *   get item type from atk accessibility
+         *   CHECK_MENU_ITEM==Atk.Role.for_name ("check menu item"):checkmenuitem
+         *   RADIO_MENU_ITEM==Atk.Role.for_name ("radio menu item"):radiomenuitem
+         *   MENU_ITEM==Atk.Role.for_name ("menu item"):menuitem
+         *   MENU==Atk.Role.for_name ("menu"):submenu
+         *   
          */
-        const int ATK_CHECKBOX =8;
-		const int ATK_RADIO =44;
-		
+		string label = item.get_label ();
+    	label = label.replace ("_", "");
+        var state = item.get_state_flags ();
         var atk = item.get_accessible ();
         Value val = Value (typeof (int));
         atk.get_property ("accessible_role", ref val);
-        var item_type = val.get_int ();
+        var item_role = (Atk.Role)val.get_int ();
+        if (item_role != Atk.Role.RADIO_MENU_ITEM) {
+            group_action = null;
+        } 
 
-        var state = item.get_state_flags ();
-        
-		//RAZ group_radio
-        group_radio = ( item_type == ATK_RADIO)? group_radio:null;
-		
+        Gtk.Widget ?new_w = null;
+
+        if (item_role == Atk.Role.CHECK_MENU_ITEM ) {
+            //  warning ("is check menu item");
+            var model_button = new Wingpanel.MenuButton (label);
+            new_w = model_button;
+        }
+        else if (item_role == Atk.Role.RADIO_MENU_ITEM) {
+            //  warning ("is radio menu item");
+            var radio = item as Gtk.RadioMenuItem;
+            var model_button = new Wingpanel.SelectableButton (label);
+            radio.toggled.connect (()=>{
+                model_button.set_selected (radio.active);
+            });
+            model_button.selected.connect ( (e)=>{
+                model_button.set_selected (e==model_button);
+            });
+            new_w = model_button;
+        }
+        else if (item_role == Atk.Role.MENU_ITEM) {
+            //  warning ("is menu item"); 
+            var model_button = new Wingpanel.MenuButton (label);
+            new_w = model_button;
+        }
+        else if (item_role == Atk.Role.MENU) {
+            //  warning ("is sub menu item");
+            var submenu = ((Gtk.MenuItem)item).submenu;
+            if (submenu!=null) {
+                var sub_grid = new Wingpanel.IndicatorGrid ();
+                //btn back
+				var btn_back = new Wingpanel.MenuButton (_("BACK"));
+				btn_back.clicked.connect(()=>{
+					main_stack.set_visible_child (main_grid);
+                    main_stack.show_all ();
+				});
+				sub_grid.add(btn_back);
+                //convert
+                menu_layout_parse (submenu, sub_grid, submenu_map);
+                main_stack.add (sub_grid);
+                
+                var model_button = new Wingpanel.MenuButton (label);
+                model_button.clicked.connect (() => {
+                    main_stack.set_visible_child (sub_grid);
+                    main_stack.show_all ();
+                });
+                new_w = model_button;
+                connect_signals (item, new_w);
+                return new_w;
+            }
+        }
+        else {
+            warning ("item role is :%d < -- >label:%s, type name:%s, role name:%s", 
+                        item_role, label, 
+                        item.get_type ().name (),
+                        item_role.get_name ());
+
+        }
         /* detect if it has a image */
         Gtk.Image? image = null;
         var child = ((Gtk.Bin)item).get_child ();
-
         if (child != null) {
-            if (child is Gtk.Image) {
-                image = (child as Gtk.Image);
-            } else if (child is Gtk.Container) {
-                image = check_for_image ((child as Gtk.Container));
-            }
-        }
-
-        if (item_type == ATK_CHECKBOX) {
-			var box_switch = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 5);
-			var lbl = new Gtk.Label (label);
-            var button = new Gtk.Switch ();
-			box_switch.pack_start (lbl, true, true, 5);
-			box_switch.pack_end (button, false, false, 5);
-			lbl.set_halign (Gtk.Align.START); 
-			lbl.margin_start = 6;
-			//init
-			var active= ((Gtk.CheckMenuItem)item).get_active ();
-			button.set_active(active);
-            button.state_set.connect ((b) => {
-                ((Gtk.CheckMenuItem)item).set_active (b);
-				return(false);
-            });
-            
-            connect_signals (item, button);
-            ((Gtk.CheckMenuItem)item).toggled.connect (() => {
-                button.active = ((Gtk.CheckMenuItem)item).get_active ();
-            });
-
-            return box_switch;
-        }
-
-        //RADIO BUTTON
-		if (item_type == ATK_RADIO) {
-			var button= new Gtk.RadioButton.with_label_from_widget(group_radio,label);
-			if (group_radio==null) {group_radio=button;}
-			button.margin = 5;
-            button.set_margin_start(10);
-			var active = ((Gtk.CheckMenuItem)item).get_active ();
-			button.set_active(active);
-			
-			button.toggled.connect (() => {
-                    item.activate ();
-                });
-           //concern only visible underlying menu (debug) 
-           /* if (item.get_visible ()) {
-				(item as Gtk.CheckMenuItem).toggled.connect (() => {
-					button.active = (item as Gtk.CheckMenuItem).get_active ();
-				});
-            } */
-			
-			return button;
-		}
-		
-        /* convert menuitem to a indicatorbutton */
-        if (item is Gtk.MenuItem) {
-			Gtk.ModelButton button;
+            image = check_for_image (child);
             if (image != null && image.pixbuf == null && image.icon_name != null) {
                 try {
                     Gtk.IconTheme icon_theme = Gtk.IconTheme.get_default ();
@@ -327,93 +363,26 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
                     warning (e.message);
                 }
             }
-            button = new Gtk.ModelButton();
-            button.text=label;
-            var hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 3);
 			if (image != null && image.pixbuf != null) {
-				var img= new Gtk.Image.from_pixbuf(image.pixbuf);
-				
-				hbox.spacing = 6;
-				hbox.add(button);
-				hbox.add(img);
-				//Modelbutton = text OR icon not both
-                //button.icon= (image.pixbuf);
+				//  var img= new Gtk.Image.from_pixbuf(image.pixbuf);
+                //  var hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 3);
+                //  hbox.set_hexpand (true);
+                //  hbox.set_vexpand (false);
+                //  hbox.add(img);
+                //  hbox.add(model_button);
+                //  return hbox;
+                //  model_button.icon = image.pixbuf;
             } 
-            if (item_type == ATK_RADIO) {
-				button.role=Gtk.ButtonRole.RADIO;
-				button.active = ((Gtk.RadioMenuItem)item).get_active ();
-			}
-            ((Gtk.CheckMenuItem)item).notify["label"].connect (() => {
-                button.text= ((Gtk.MenuItem)item).get_label ().replace ("_", "");
-            });
-
-			button.set_state_flags(state,true); 
-			
-            var submenu = ((Gtk.MenuItem)item).submenu;
-
-            if (submenu != null) {
-                var scroll_sub = new Gtk.ScrolledWindow (null, null);
-                scroll_sub.set_policy (Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC);
-                var sub_list = new Gtk.ListBox ();
-                scroll_sub.add (sub_list);
-                //btn back
-				var btn_back = new Gtk.ModelButton();
-				btn_back.text= _("Back");
-				btn_back.inverted=true;
-				btn_back.menu_name="main_list";
-				btn_back.clicked.connect(()=>{
-					main_stack.set_visible_child (main_list);
-				});
-				sub_list.add(btn_back);
-                //convert
-                foreach (var sub_item in submenu.get_children ()) {
-					var sub_menu_item = convert_menu_widget (sub_item);
-					connect_signals (sub_item, sub_menu_item);
-					sub_list.add (sub_menu_item);
-				}
-				//dynamic change at run time
-				submenu.insert.connect ((item) => {
-				  var w = convert_menu_widget (item);
-
-        		  if (w != null) {
-            			submenu_map.set (item, w);
-						sub_list.add(w);
-        			}
-				});
-				submenu.remove.connect ((item)=> {
-					var w = menu_map.get (item);
-
-        			if (w != null) {
-            			sub_list.remove (w);
-            			submenu_map.unset (item);
-        			}	
-				});
-                main_stack.add (scroll_sub);
-                
-                //modelbutton for popup
-				button = new Gtk.ModelButton();
-                button.text= label; 
-                button.menu_name="submenu";
-                
-                button.clicked.connect (() => {
-                    main_stack.set_visible_child (scroll_sub);
-                    main_stack.show_all ();
-                });
-            } else {
-                button.clicked.connect (() => {
-                    close ();
-                    item.activate ();
-                });
-            }
-
-            connect_signals (item, button);
-
-            if ((image != null && image.pixbuf != null)) {
-				return hbox;}
-            else {return button;}
         }
-
-        return null;
+        new_w.set_state_flags (state, true);
+        if (new_w is Gtk.Button) {
+            ((Gtk.Button)new_w).clicked.connect (()=>{
+                item.activate ();
+                close ();
+            });
+        }
+        connect_signals (item, new_w);
+        return new_w;
     }
 
     public override void opened () {
