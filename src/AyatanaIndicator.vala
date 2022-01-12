@@ -30,7 +30,6 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
     //maps to help dynamic changes in menus and submenus
     private Gee.HashMap<Gtk.Widget, Gtk.Widget> menu_map;
-	private Gee.HashMap<Gtk.Widget, Gtk.Widget> submenu_map;
 	
     const int MAX_ICON_SIZE = 20;
     
@@ -50,7 +49,6 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         this.indicator = indicator;
         this.parent_object = obj;
         this.menu_map = new Gee.HashMap<Gtk.Widget, Gtk.Widget> ();
-        this.submenu_map = new Gee.HashMap<Gtk.Widget, Gtk.Widget> ();
         entry_name_hint = name_hint;
 
         if (entry.menu == null) {
@@ -155,8 +153,9 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
                 return Gdk.EVENT_PROPAGATE;
             });
 
-            main_stack = new Gtk.Stack ();
-            main_stack.vhomogeneous = false;
+            main_stack = new Gtk.Stack () {
+                vhomogeneous = false
+            };
             main_stack.map.connect (() => {
 				//reload: open first on main_list
                 main_stack.set_visible_child (main_grid);
@@ -166,6 +165,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             main_stack.add (main_grid);
 
             menu_layout_parse (entry.menu, main_grid, menu_map);
+            main_grid.show_all ();
 
         }
 
@@ -174,30 +174,29 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
     private void menu_layout_parse (Gtk.Menu menu, 
                                         Gtk.Container container=main_grid,
-                                        Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap=menu_map) {
+                                        Gee.HashMap<Gtk.Widget, Gtk.Widget> hashmap=menu_map) {
         foreach (var item in menu.get_children ()) {
             on_menu_widget_insert (item, container, hashmap);
         }
 
         menu.insert.connect ((e)=>{
             on_menu_widget_insert (e, container, hashmap);
+            container.show_all ();
         });
         menu.remove.connect ( (e)=>{
             on_menu_widget_remove (e, container, hashmap);
+            container.show_all ();
         });
     }
 
     private void on_menu_widget_insert (Gtk.Widget item,
                                         Gtk.Container container,
                                         Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap) {
-        var w = convert_menu_widget (item);
+        var w = convert_menu_widget (item, container);
         if (w != null) {
             on_menu_widget_remove (item, container, hashmap);
             hashmap.set (item, w);
             container.add (w);
-            //  if (w is Gtk.ModelButton) {
-                //  warning ("add widget :%s 0x%lx", ((Gtk.ModelButton)w).text,  (long)w);
-            //  }
             /* menuitem not visible */
             if (!item.get_visible ()) {
                 w.no_show_all = true;
@@ -214,12 +213,6 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         var w = hashmap.get (item);
 
         if (w != null) {
-            if (w is Gtk.ModelButton) {
-                warning ("remove widget :%s 0x%lx", ((Gtk.ModelButton)w).text, (long)w);
-            }
-            if (!(w is Gtk.Widget)) {
-                warning ("remove not a  widget =========:%s 0x%lx", ((Gtk.Button)w).label, (long)w);
-            }
             container.remove (w);
             hashmap.unset (item);
         }
@@ -260,7 +253,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     }
 
     /* convert the menuitems to widgets that can be shown in popovers */
-    private Gtk.Widget? convert_menu_widget (Gtk.Widget widget) {
+    private Gtk.Widget? convert_menu_widget (Gtk.Widget widget, Gtk.Container container) {
         var item = widget as Gtk.MenuItem;
         if (item == null) {
 			group_radio = null; 
@@ -294,55 +287,59 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             group_radio = null;
         } 
 
-        Gtk.Widget ?new_w = null;
+        //  warning ("%s   %s    %d", item.get_type ().name (), item_role.get_name (), item_role);
+        Gtk.Button ?new_button = null;
 
         if (item_role == Atk.Role.CHECK_MENU_ITEM ) {
             //  warning ("is check menu item");
-            //  var check = item as Gtk.CheckMenuItem;
-            var check_button = new Wingpanel.MenuButton (label);
-            new_w = check_button;
-        }
-        else if (item_role == Atk.Role.RADIO_MENU_ITEM) {
-            //  warning ("is radio menu item");
-            var radio = item as Gtk.RadioMenuItem;
-            var radio_button = new RadioButton (label, group_radio);
-            if (group_radio == null) {
-                group_radio = radio_button;
-            }
-
-            radio_button.set_selected (radio.active);
-            new_w = radio_button;
+            var button = new Wingpanel.MenuButton (label);
+            new_button = button;
         }
         else if (item_role == Atk.Role.MENU_ITEM) {
             //  warning ("is menu item"); 
-            var model_button = new Wingpanel.MenuButton (label);
-            new_w = model_button;
+            var button = new Wingpanel.MenuButton (label);
+            new_button = button;
+        }
+        else if (item_role == Atk.Role.RADIO_MENU_ITEM) {
+            //  warning ("is radio menu item"); cant convert to radiomenuitem
+            var button = new RadioButton (label, group_radio);
+            if (group_radio == null) {
+                group_radio = button;
+            }
+            var check = item as Gtk.CheckMenuItem;
+            if (check != null) {
+                if (check.active) {
+                    button.set_selected (check.active);
+                    button.selected (button);
+                }
+            }
+            new_button = button;
         }
         else if (item_role == Atk.Role.MENU) {
             //  warning ("is sub menu item");
             var submenu = ((Gtk.MenuItem)item).submenu;
             if (submenu!=null) {
-                var sub_grid = new Wingpanel.IndicatorGrid ();
+                var child_grid = new Wingpanel.IndicatorGrid ();
                 //btn back
 				var btn_back = new Wingpanel.MenuButton (_("BACK"));
 				btn_back.clicked.connect(()=>{
-					main_stack.set_visible_child (main_grid);
-                    main_stack.show_all ();
+                    alter_display_page (container);
 				});
-				sub_grid.add(btn_back);
-				sub_grid.add(new Gtk.Separator (Gtk.Orientation.HORIZONTAL));
+				child_grid.add(btn_back);
+				child_grid.add(new Gtk.Separator (Gtk.Orientation.HORIZONTAL));
                 //convert
-                menu_layout_parse (submenu, sub_grid, submenu_map);
-                main_stack.add (sub_grid);
+                menu_layout_parse (submenu, child_grid, menu_map);
+
+                main_stack.add (child_grid);
                 
-                var model_button = new Wingpanel.MenuButton (label);
-                model_button.clicked.connect (() => {
-                    main_stack.set_visible_child (sub_grid);
-                    main_stack.show_all ();
+                var button = new Wingpanel.MenuButton (label);
+                button.set_state_flags (state, true);
+                button.clicked.connect (() => {
+                    item.activate ();
+                    alter_display_page (child_grid);
                 });
-                new_w = model_button;
-                connect_signals (item, new_w);
-                return new_w;
+                connect_signals (item, button);
+                return button;
             }
         }
         else {
@@ -350,6 +347,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
                         item_role, label, 
                         item.get_type ().name (),
                         item_role.get_name ());
+            return null;
 
         }
         /* detect if it has a image */
@@ -376,17 +374,22 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
                 //  model_button.icon = image.pixbuf;
             } 
         }
-        new_w.set_state_flags (state, true);
-        if (new_w is Gtk.Button) {
-            ((Gtk.Button)new_w).clicked.connect (()=>{
-                item.activate ();
-                close ();
-            });
-        }
-        connect_signals (item, new_w);
-        return new_w;
+
+        new_button.set_state_flags (state, true);
+        new_button.clicked.connect (()=>{
+            item.activate ();
+        });
+        connect_signals (item, new_button);
+
+        return new_button;
     }
 
+    private void alter_display_page (Gtk.Widget page) {
+        int width = main_stack.get_allocated_width ();
+        main_stack.get_window ().resize (width, 1);
+        main_stack.set_visible_child (page);
+        main_stack.show_all ();
+    }
     public override void opened () {
     }
 
