@@ -135,6 +135,11 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         return Gdk.EVENT_PROPAGATE;
     }
 
+    private void update_entry_menu () {
+        entry.menu.popup_at_widget(icon.parent,0,0);
+        entry.menu.popdown ();
+    }
+
     public override Gtk.Widget? get_widget () {
         if (main_stack == null) {
             bool reloaded = false;
@@ -146,8 +151,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
                      */
                     reloaded = true;
                     //show underlying menu (debug)
-                    //entry.menu.popup_at_widget(icon.parent,0,0);
-                    //entry.menu.popdown ();
+                    update_entry_menu ();
                 }
 
                 return Gdk.EVENT_PROPAGATE;
@@ -192,6 +196,11 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     private void on_menu_widget_insert (Gtk.Widget item,
                                         Gtk.Container container,
                                         Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap) {
+        if (hashmap.get (item)!=null) {
+            warning ("has been inserted before");
+            return;
+        }
+        //  warning ("insert %s", ((Gtk.MenuItem)item).label);
         var w = convert_menu_widget (item, container);
         if (w != null) {
             on_menu_widget_remove (item, container, hashmap);
@@ -292,7 +301,14 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
         if (item_role == Atk.Role.CHECK_MENU_ITEM ) {
             //  warning ("is check menu item");
-            var button = new Wingpanel.MenuButton (label);
+            var button = new Wingpanel.SelectableButton (label);
+            var check = item as Gtk.CheckMenuItem;
+            if (check != null) {
+                if (check.active) {
+                    button.set_selected (check.active);
+                    button.selected (button);
+                }
+            }
             new_button = button;
         }
         else if (item_role == Atk.Role.MENU_ITEM) {
@@ -335,7 +351,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
                 var button = new Wingpanel.MenuButton (label);
                 button.set_state_flags (state, true);
                 button.clicked.connect (() => {
-                    item.activate ();
+                    //  item.activate ();
                     alter_display_page (child_grid);
                 });
                 connect_signals (item, button);
@@ -378,6 +394,11 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         new_button.set_state_flags (state, true);
         new_button.clicked.connect (()=>{
             item.activate ();
+            GLib.Timeout.add (100, ()=>{
+                update_entry_menu ();
+                return false;
+            });
+            close ();
         });
         connect_signals (item, new_button);
 
