@@ -71,3 +71,30 @@ public class AyatanaCompatibility.IndicatorButton : Gtk.Box {
         } 
     }
 }
+
+public class AyatanaCompatibility.RadioButton : Wingpanel.SelectableButton {
+
+    private RadioButton ?grp_=null;
+    public RadioButton group  {
+        set {
+            grp_ = value!=null ? value : this;
+        }
+        get {
+            return grp_;
+        }
+    }
+    private Wingpanel.SelectableButton ?current_selected=null;
+
+    public RadioButton (string label, RadioButton ?grp = null) {
+        base (label);
+        group = grp;
+
+        selected.connect ( ()=>{
+            if ( group.current_selected!=null && this!=group.current_selected ) {
+                group.current_selected.set_selected (false);
+            }
+            group.current_selected = this;
+        });
+    }
+    
+}
