@@ -250,13 +250,18 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             button.no_show_all = true;
             button.hide ();
         });
-		item.state_flags_changed.connect  ((type) => {
+		item.state_flags_changed.connect ((type) => {
            button.set_state_flags (item.get_state_flags (),true);
-        //     warning ("========%d", item.get_state_flags ());
         });
-        if (item is Gtk.MenuItem && button is Gtk.Button) {
+        if (item is Gtk.MenuItem) {
             ((Gtk.MenuItem)item).notify["label"].connect (() => {
-                ((Gtk.Button)button).label = ((Gtk.MenuItem)item).get_label ().replace ("_", "");
+                var label = ((Gtk.MenuItem)item).get_label ().replace ("_", "");
+                if ( button is MenuButton ) {
+                    ((MenuButton)button).label = label;
+                }
+                else {
+                    warning ("========label should be changed to %s=========", label);
+                }
             });
         }
     }
@@ -312,8 +317,8 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             new_button = button;
         }
         else if (item_role == Atk.Role.MENU_ITEM) {
-            //  warning ("is menu item"); 
-            var button = new Wingpanel.MenuButton (label);
+            //  warning ("%s  -- is menu item", label); 
+            var button = new MenuButton (label);
             new_button = button;
         }
         else if (item_role == Atk.Role.RADIO_MENU_ITEM) {
@@ -337,7 +342,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             if (submenu!=null) {
                 var child_grid = new Wingpanel.IndicatorGrid ();
                 //btn back
-				var btn_back = new Wingpanel.MenuButton (_("BACK"));
+				var btn_back = new MenuButton (_("BACK"), Gtk.ArrowType.LEFT);
 				btn_back.clicked.connect(()=>{
                     alter_display_page (container);
 				});
@@ -348,7 +353,8 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
                 main_stack.add (child_grid);
                 
-                var button = new Wingpanel.MenuButton (label);
+                //upper btn
+                var button = new MenuButton (label, Gtk.ArrowType.RIGHT);
                 button.set_state_flags (state, true);
                 button.clicked.connect (() => {
                     //  item.activate ();
