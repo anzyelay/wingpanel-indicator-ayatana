@@ -306,12 +306,11 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
         if (item_role == Atk.Role.CHECK_MENU_ITEM ) {
             //  warning ("is check menu item");
-            var button = new Wingpanel.SelectableButton (label);
+            var button = new CheckButton (label);
             var check = item as Gtk.CheckMenuItem;
             if (check != null) {
                 if (check.active) {
-                    button.set_selected (check.active);
-                    button.selected (button);
+                    button.check = check.active;
                 }
             }
             new_button = button;
@@ -330,8 +329,9 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             var check = item as Gtk.CheckMenuItem;
             if (check != null) {
                 if (check.active) {
-                    button.set_selected (check.active);
-                    button.selected (button);
+                    button.check = check.active;
+                    //  button.set_selected (check.active);
+                    //  button.selected (button);
                 }
             }
             new_button = button;
