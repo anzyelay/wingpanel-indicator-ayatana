@@ -27,6 +27,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     private unowned IndicatorAyatana.Object parent_object;
     private IndicatorIface indicator;
     private string entry_name_hint;
+    private bool entry_is_null = false;
 
     //maps to help dynamic changes in menus and submenus
     private Gee.HashMap<Gtk.Widget, Gtk.Widget> menu_map;
@@ -134,10 +135,17 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
         return Gdk.EVENT_PROPAGATE;
     }
+    
+    public void clear_entry () {
+        entry_is_null = true;
+        close ();
+    }
 
     private void update_entry_menu () {
-        entry.menu.popup_at_widget(icon.parent,0,0);
-        entry.menu.popdown ();
+        if (!entry_is_null) {
+            entry.menu.popup_at_widget(icon.parent,0,0);
+            entry.menu.popdown ();
+        }
     }
 
     public override Gtk.Widget? get_widget () {
@@ -408,11 +416,11 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         new_button.set_state_flags (state, true);
         new_button.clicked.connect (()=>{
             item.activate ();
-            GLib.Timeout.add (100, ()=>{
+            GLib.Timeout.add (150, ()=>{
                 update_entry_menu ();
                 return false;
             });
-            close ();
+            //  close ();
         });
         connect_signals (item, new_button);
 
