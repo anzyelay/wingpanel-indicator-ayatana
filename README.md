@@ -1,22 +1,18 @@
 # Wingpanel Ayatana-Compatibility Indicator (Community Version)
 
 <h1>Description:</h1>
-Keep compatibility with ubuntu/unity indicators on Elementary OS wingpanel.
+Keep compatibility with ubuntu/unity indicators on Patapua OS wingpanel.
 If you want to install applications with indicators like weather forecast, redshift, social networks... this plug-in let these indicators appear in your panel.
 
 <p align="center"><img src="screenshot.png"/> </p>
 
 <b>Important:</b> To add support for Legacy icons (Wine, PlayOnLinux) see here : <a href="https://github.com/msmaldi/wingpanel-indicator-na-tray">msmaldi/wingpanel-indicator-na-tray</a>
-
+, this project fork from here : <a href="https://github.com/Lafydev/wingpanel-indicator-ayatana">Lafydev</a>
 <h2>Dependencies</h2>
 
 You'll need the following dependencies :
 
 <pre>sudo apt-get install libglib2.0-dev libgranite-dev libindicator3-dev </pre>
-
-- Version Hera(5) and previous :
-  
-  <pre>sudo apt-get install libwingpanel-2.0-dev</pre>
 
 - version odin(6) : 
   
@@ -25,12 +21,12 @@ You'll need the following dependencies :
 <h1>Easy Install (user only)</h1>
 1. Download the deb file from your version :
 
-- <a href="https://github.com/Lafydev/wingpanel-indicator-ayatana/blob/master/com.github.lafydev.wingpanel-indicator-ayatana_2.0.7_amd64.deb">com.github.*amd64.deb</a> for hera and previous  
-- OR <a href="https://github.com/Lafydev/wingpanel-indicator-ayatana/blob/master/com.github.lafydev.wingpanel-indicator-ayatana_2.0.8_odin.deb">com.github.*odin.deb</a>  
+- <a href="">wingpanel-indicator-ayatana.*amd64.deb</a> for hera and previous  
+- OR <a href="">wingpanel-indicator-ayatana.*odin.deb</a>  
 
 and launch install:<br/>
 
-<pre>sudo dpkg -i ./com.github.lafydev.wingpanel*.deb</pre>
+<pre>sudo dpkg -i ./wingpanel-indicator-ayatana*.deb</pre>
 
 <h2>Parameters for Pantheon (eos)</h2>
 2. You need to add Pantheon to the list of desktops abled to work with indicators :<br/>
@@ -80,5 +76,4 @@ Open a terminal in the build folder.
 <pre>sudo ninja uninstall</pre>
 
 Reboot or restart wingpanel : 
-Version Hera(5) and previous:  <pre>killall wingpanel</pre>
 Version Odin(6): <pre>killall io.elementary.wingpanel</pre>
