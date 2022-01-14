@@ -155,16 +155,24 @@ namespace AyatanaCompatibility {
     }
 
     public class RadioButton : ToggleButton {
-        private RadioButton ?_group = null;
+        private RadioButton ?_current_selected=null;
+        private RadioButton _group;
         public RadioButton group  {
             set {
                 _group = value!=null ? value : this;
             }
             get {
-                return _group;
+                return _group!=null ? _group : this;
             }
         }
-        private RadioButton ?current_selected=null;
+        public RadioButton ?current_selected {
+            get {
+                return group._current_selected;
+            }
+            set {
+                group._current_selected = value;
+            }
+        }
     
         public RadioButton (string label, RadioButton ?group = null) {
             base (label);
@@ -172,11 +180,11 @@ namespace AyatanaCompatibility {
         }
 
         private void alter_selected_button () {
-            if ( group.current_selected!=null && this!=group.current_selected ) {
+            if ( current_selected!=null && this!=current_selected ) {
                 // change last selected button's checked status
-                group.current_selected.checked = false;
+                current_selected.checked = false;
             }
-            group.current_selected = this;
+            current_selected = this;
         }
 
         public override void toggle () {
