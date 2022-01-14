@@ -160,7 +160,9 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             main_stack = new Gtk.Stack () {
                 vhomogeneous = false
             };
-            main_grid = new Wingpanel.IndicatorGrid ();
+            main_grid = new Wingpanel.IndicatorGrid () {
+                valign = Gtk.Align.START
+            };
             menu_layout_parse (entry.menu, main_grid, menu_map);
             main_stack.add (main_grid);
             main_stack.show_all();
@@ -188,11 +190,9 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
         menu.insert.connect ((e)=>{
             on_menu_widget_insert (e, container, hashmap);
-            container.show_all ();
         });
         menu.remove.connect ( (e)=>{
             on_menu_widget_remove (e, container, hashmap);
-            container.show_all ();
         });
     }
 
@@ -203,12 +203,10 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             warning ("has been inserted before");
             return;
         }
-        //  warning ("insert %s", ((Gtk.MenuItem)item).label);
         var w = convert_menu_widget (item, container);
         if (w != null) {
-            on_menu_widget_remove (item, container, hashmap);
-            hashmap.set (item, w);
             container.add (w);
+            hashmap.set (item, w);
             /* menuitem not visible */
             if (!item.get_visible ()) {
                 w.no_show_all = true;
@@ -216,6 +214,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             } else {
                 w.show ();
             }
+            //  warning ("insert %s", ((Gtk.MenuItem)item).label);
         }
     }
 
@@ -225,8 +224,13 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         var w = hashmap.get (item);
 
         if (w != null) {
+            //  warning ("------------remove a item: %s --> widget: %s", ((Gtk.MenuItem)item).get_label (), w.get_type ().name ());
             container.remove (w);
             hashmap.unset (item);
+            w.destroy ();
+        }
+        else {
+            warning ("the removing item (%s) are not found!!", ((Gtk.MenuItem)item).get_label ());
         }
     }
 
@@ -273,6 +277,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     private Gtk.Widget? convert_menu_widget (Gtk.Widget widget, Gtk.Container container) {
         var item = widget as Gtk.MenuItem;
         if (item == null) {
+            warning ("not a menu item type");
 			group_radio = null; 
             return null;
         }
@@ -341,7 +346,9 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             //  warning ("is sub menu item");
             var submenu = ((Gtk.MenuItem)item).submenu;
             if (submenu!=null) {
-                var child_grid = new Wingpanel.IndicatorGrid ();
+                var child_grid = new Wingpanel.IndicatorGrid () {
+                    valign = Gtk.Align.START
+                };
                 //back btn
 				var btn_back = new MenuButton (_("BACK"), Gtk.ArrowType.LEFT);
 				btn_back.clicked.connect(()=>{
