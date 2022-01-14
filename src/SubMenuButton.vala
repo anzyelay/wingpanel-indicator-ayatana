@@ -27,9 +27,6 @@ namespace AyatanaCompatibility {
         .checked {
             background: rgba(38, 138, 255, 1);
         }
-        button box label {
-            font-size: 16px;
-        }
         """;
     public class MenuButton : Gtk.Button {
         private Gtk.Label ?_label = null;
@@ -74,13 +71,23 @@ namespace AyatanaCompatibility {
         public new Gtk.Image image {
             set {
                 _image = value;
-                //  try {
-                    //  Gtk.IconTheme icon_theme = Gtk.IconTheme.get_default ();
-                    //  _image.pixbuf = icon_theme.load_icon (icon_name, 16, 0);
-                //  } catch (Error e) {
-                //      warning (e.message);
-                //  }
             }
+        }
+
+        construct {
+            var style_context = get_style_context ();
+            style_context.add_class ("flat");
+
+            //TODO make sure with hh about the label font size 
+            Gtk.CssProvider provider = new Gtk.CssProvider();
+            try {
+                provider.load_from_data (button_css, button_css.length);
+            } catch (GLib.Error err) {
+                warning ("load css data failure:%s", err.message);
+                return;
+            }
+            style_context.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+
         }
 
         public MenuButton (string label, Gtk.ArrowType arrow_type = Gtk.ArrowType.NONE) {
@@ -105,28 +112,12 @@ namespace AyatanaCompatibility {
             show_all ();
         }
 
-        construct {
-            var style_context = this.get_style_context ();
-            style_context.add_class ("flat");
-
-            //TODO make sure with hh about the label font size 
-            Gtk.CssProvider provider = new Gtk.CssProvider();
-            try {
-                provider.load_from_data (button_css, button_css.length);
-                style_context.add_provider(provider,
-                                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
-                _label.get_style_context ().add_provider (provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
-            } catch (GLib.Error err) {
-                ;
-            }
-
-        }
     }
     public class ToggleButton : MenuButton {
         //  public abstract bool check { set; get; }
         public signal void toggled ();
         private bool _checked = false;
-        public virtual bool check { 
+        public virtual bool checked { 
             get { return _checked; }
             set {
                 _checked = value;
@@ -139,17 +130,17 @@ namespace AyatanaCompatibility {
             }
         }
         
+        construct {
+            clicked.connect (toggle);
+        }
+
         public ToggleButton (string label) {
             base (label);
         }
 
-        construct {
-            clicked.connect (on_toggle_event);
-        }
-
-        public virtual void on_toggle_event () {
+        public virtual void toggle () {
             toggled ();
-            check = !check;
+            checked = !checked;
         }
 
     }
@@ -157,22 +148,13 @@ namespace AyatanaCompatibility {
         public CheckButton (string label) {
             base (label);
         }
-        public CheckButton.with_checked (string label, bool check) {
+        public CheckButton.with_checked (string label, bool checked) {
             base (label);
-            this.check = check;
+            this.checked = checked;
         }
     }
 
     public class RadioButton : ToggleButton {
-        public override bool check {
-            get { return base.check; }
-            set {
-                if (value) {
-                    alter_selected_button ();
-                }
-                base.check = value;
-            }
-        }
         private RadioButton ?_group = null;
         public RadioButton group  {
             set {
@@ -191,10 +173,17 @@ namespace AyatanaCompatibility {
 
         private void alter_selected_button () {
             if ( group.current_selected!=null && this!=group.current_selected ) {
-                // change last selected button's status
-                group.current_selected.check = false;
+                // change last selected button's checked status
+                group.current_selected.checked = false;
             }
             group.current_selected = this;
+        }
+
+        public override void toggle () {
+            if (!checked) {
+                alter_selected_button ();
+                checked = true;
+            }
         }
     }
 }

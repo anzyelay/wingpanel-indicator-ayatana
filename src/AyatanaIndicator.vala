@@ -310,7 +310,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             var check = item as Gtk.CheckMenuItem;
             if (check != null) {
                 if (check.active) {
-                    button.check = check.active;
+                    button.checked = check.active;
                 }
             }
             new_button = button;
@@ -329,9 +329,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             var check = item as Gtk.CheckMenuItem;
             if (check != null) {
                 if (check.active) {
-                    button.check = check.active;
-                    //  button.set_selected (check.active);
-                    //  button.selected (button);
+                    button.toggle ();
                 }
             }
             new_button = button;
