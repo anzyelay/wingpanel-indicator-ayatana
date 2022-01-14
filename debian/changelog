@@ -1,3 +1,14 @@
+wingpanel-indicator-ayatana (2.1.1) unstable; urgency=medium
+  * fix bug:wingpanel crash while click quit or restart item,click-not-close-window
+  * fix a bug:cant remove a exist item
+  * modify separator style
+  * fix show error when child-menu is higher than topmenu
+  * update project readme,file
+  * modify radio group,export it
+  * fix toggle click change, add label css error 
+
+ -- leixiaoan <leixa@jideos.com>  Fri, 14 Jan 2022 20:18:45 +0800
+
 wingpanel-indicator-ayatana (2.1.0) unstable; urgency=medium
 
   * rebuild radio,toggle,check,menu button, modify css
