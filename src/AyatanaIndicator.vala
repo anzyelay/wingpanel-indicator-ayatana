@@ -280,7 +280,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         /* separator are GTK.SeparatorMenuItem, return a separator */
         if (item is Gtk.SeparatorMenuItem) {
 			group_radio = null; 
-            var separator =  new Gtk.Separator (Gtk.Orientation.HORIZONTAL);
+            var separator =  new Separator ();
             connect_signals (item, separator);
             return separator;
         }
@@ -347,8 +347,8 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 				btn_back.clicked.connect(()=>{
                     alter_display_page (container);
 				});
-				child_grid.add(btn_back);
-				child_grid.add(new Gtk.Separator (Gtk.Orientation.HORIZONTAL));
+				child_grid.add (btn_back);
+				child_grid.add (new Separator ());
                 //convert
                 menu_layout_parse (submenu, child_grid, menu_map);
 

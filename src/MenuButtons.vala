@@ -194,4 +194,14 @@ namespace AyatanaCompatibility {
             }
         }
     }
+
+    public class Separator : Gtk.Separator {
+        public Separator () {
+            orientation = Gtk.Orientation.HORIZONTAL;
+            margin_top = 4;
+            margin_bottom = 4;
+            margin_start = 6;
+            margin_end = 6;
+        }
+    }
 }
