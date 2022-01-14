@@ -160,17 +160,20 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             main_stack = new Gtk.Stack () {
                 vhomogeneous = false
             };
+            main_grid = new Wingpanel.IndicatorGrid ();
+            menu_layout_parse (entry.menu, main_grid, menu_map);
+            main_stack.add (main_grid);
+            main_stack.show_all();
+
             main_stack.map.connect (() => {
 				//reload: open first on main_list
                 main_stack.set_visible_child (main_grid);
                 reloaded = false;
             });
-            main_grid = new Wingpanel.IndicatorGrid ();
-            main_stack.add (main_grid);
-
-            menu_layout_parse (entry.menu, main_grid, menu_map);
-            main_grid.show_all ();
-
+            main_stack.unmap.connect (()=>{
+                //make sure right height when show again
+                alter_display_page (main_grid);
+            });
         }
 
         return main_stack;
@@ -302,7 +305,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         } 
 
         //  warning ("%s   %s    %d", item.get_type ().name (), item_role.get_name (), item_role);
-        Gtk.Button ?new_button = null;
+        MenuButton ?new_button = null;
 
         if (item_role == Atk.Role.CHECK_MENU_ITEM ) {
             //  warning ("is check menu item");
@@ -339,7 +342,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             var submenu = ((Gtk.MenuItem)item).submenu;
             if (submenu!=null) {
                 var child_grid = new Wingpanel.IndicatorGrid ();
-                //btn back
+                //back btn
 				var btn_back = new MenuButton (_("BACK"), Gtk.ArrowType.LEFT);
 				btn_back.clicked.connect(()=>{
                     alter_display_page (container);
@@ -351,7 +354,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
                 main_stack.add (child_grid);
                 
-                //upper btn
+                //forward btn
                 var button = new MenuButton (label, Gtk.ArrowType.RIGHT);
                 button.set_state_flags (state, true);
                 button.clicked.connect (() => {
@@ -411,8 +414,9 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
     private void alter_display_page (Gtk.Widget page) {
         int width = main_stack.get_allocated_width ();
-        main_stack.get_window ().resize (width, 1);
+        int height = page.get_allocated_height ();
         main_stack.set_visible_child (page);
+        main_stack.get_window ().resize (width, height);
         main_stack.show_all ();
     }
     public override void opened () {
