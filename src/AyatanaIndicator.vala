@@ -138,13 +138,15 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     
     public void clear_entry () {
         entry_is_null = true;
-        close ();
     }
 
     private void update_entry_menu () {
         if (!entry_is_null) {
             entry.menu.popup_at_widget(icon.parent,0,0);
             entry.menu.popdown ();
+        }
+        else {
+            close ();
         }
     }
 
@@ -435,6 +437,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         main_stack.show_all ();
     }
     public override void opened () {
+        entry_is_null = false;
     }
 
     public override void closed () {

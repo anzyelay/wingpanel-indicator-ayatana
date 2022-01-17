@@ -43,12 +43,18 @@ public class AyatanaCompatibility.IndicatorObject : Object, IndicatorIface {
     private void load_entries () {
         List<unowned IndicatorAyatana.ObjectEntry> list = object.get_entries ();
 
-        foreach (var entry in list)
+        foreach (var entry in list) {
             entries.set (entry, create_entry (entry));
+        }
     }
 
     private void on_entry_added (IndicatorAyatana.Object object, IndicatorAyatana.ObjectEntry entry) {
         assert (this.object == object);
+
+        if (entries.has_key (entry)) {
+            warning ("=======has already exist %s", entry.name_hint);
+            return;
+        }
 
         var entry_widget = create_entry (entry);
         entries.set (entry, entry_widget);
@@ -62,9 +68,9 @@ public class AyatanaCompatibility.IndicatorObject : Object, IndicatorIface {
         var entry_widget = entries.get (entry);
 
         if (entry_widget != null) {
-            entries.unset (entry);
-            entry_removed (entry_widget);
             entry_widget.clear_entry ();
+            entry_removed (entry_widget);
+            entries.unset (entry);
         } else {
             warning ("Could not remove panel entry for %s (%s). No entry found.", name, entry.name_hint);
         }
