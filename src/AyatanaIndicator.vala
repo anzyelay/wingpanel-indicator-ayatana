@@ -21,7 +21,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     private IndicatorButton icon;
 
     private Gtk.Stack main_stack;
-    private Wingpanel.IndicatorGrid main_grid;
+    private MenuGrid main_grid;
 
     private unowned IndicatorAyatana.ObjectEntry entry;
     private unowned IndicatorAyatana.Object parent_object;
@@ -170,9 +170,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             main_stack = new Gtk.Stack () {
                 vhomogeneous = false
             };
-            main_grid = new Wingpanel.IndicatorGrid () {
-                valign = Gtk.Align.START
-            };
+            main_grid = new MenuGrid ();
             menu_layout_parse (entry.menu, main_grid, menu_map);
             main_stack.add (main_grid);
             main_stack.show_all();
@@ -237,7 +235,6 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             //  warning ("------------remove a item: %s --> widget: %s", ((Gtk.MenuItem)item).get_label (), w.get_type ().name ());
             container.remove (w);
             hashmap.unset (item);
-            w.destroy ();
         }
         else {
             warning ("the removing item (%s) are not found!!", ((Gtk.MenuItem)item).get_label ());
@@ -356,9 +353,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             //  warning ("is sub menu item");
             var submenu = ((Gtk.MenuItem)item).submenu;
             if (submenu!=null) {
-                var child_grid = new Wingpanel.IndicatorGrid () {
-                    valign = Gtk.Align.START
-                };
+                var child_grid = new MenuGrid ();
                 //back btn
 				var btn_back = new MenuButton (_("BACK"), Gtk.ArrowType.LEFT);
 				btn_back.clicked.connect(()=>{

@@ -28,6 +28,14 @@ namespace AyatanaCompatibility {
             background: rgba(38, 138, 255, 1);
         }
         """;
+    const string grid_css = """
+        grid {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+            box-shadow: inset 0 20px 30px -1px rgba(0, 0, 0, 0.1);
+            padding: 4px;
+        }
+    """;
     public class MenuButton : Gtk.Button {
         private Gtk.Label ?_label = null;
         private Gtk.Image _image;
@@ -202,6 +210,26 @@ namespace AyatanaCompatibility {
             margin_bottom = 4;
             margin_start = 6;
             margin_end = 6;
+        }
+    }
+    
+    public class MenuGrid : Gtk.Grid {
+        construct {
+            orientation = Gtk.Orientation.VERTICAL;
+            expand = true;
+            valign = Gtk.Align.START;
+            var style_context = get_style_context ();
+
+            //TODO make sure with hh about the label font size 
+            Gtk.CssProvider provider = new Gtk.CssProvider();
+            try {
+                provider.load_from_data (grid_css, grid_css.length);
+            } catch (GLib.Error err) {
+                warning ("load css data failure:%s", err.message);
+                return;
+            }
+            style_context.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+
         }
     }
 }
