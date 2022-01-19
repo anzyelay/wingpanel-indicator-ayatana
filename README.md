@@ -77,3 +77,10 @@ Open a terminal in the build folder.
 
 Reboot or restart wingpanel : 
 Version Odin(6): <pre>killall io.elementary.wingpanel</pre>
+
+# requirement settings by some application 
+## neteasy-music
+```sh
+sed -ri 's/^Exec=(.*)/Exec=env XDG_CURRENT_DESKTOP=Unity \1/g' /usr/share/applications/neteasy-cloud-music.desktop
+```
+
