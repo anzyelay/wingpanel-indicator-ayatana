@@ -18,8 +18,8 @@
 public class AyatanaCompatibility.IndicatorIcon : Gtk.Box {
     const int MAX_ICON_SIZE = 20;
 
-    private Gtk.Label the_label;
-    private Gtk.Image the_image;
+    private Gtk.Label ?the_label = null;
+    private Gtk.Image ?the_image = null;
 
     public IndicatorIcon (string ?name = null) {
         this.name = name;
@@ -29,11 +29,10 @@ public class AyatanaCompatibility.IndicatorIcon : Gtk.Box {
         // Fix padding.
         Gtk.StyleContext style = get_style_context ();
         Gtk.CssProvider provider = new Gtk.CssProvider ();
-		//catch GLib error
 		try {
 			provider.load_from_data (".ayatana-indicator { padding: 0px; }");
 		} catch (Error e) {
-                warning (e.message);
+            warning (e.message);
         }
         style.add_provider (provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
         style.add_class ("ayatana-indicator");
@@ -51,14 +50,30 @@ public class AyatanaCompatibility.IndicatorIcon : Gtk.Box {
     }
 
     public void set_image (Gtk.Image ?image) {
+        // dont clear old image
+        if (image == null) {
+            return;
+        }
+        if (image.storage_type == Gtk.ImageType.PIXBUF 
+            && the_image != null 
+            && image.pixbuf == the_image.pixbuf) {
+            return;
+        } 
+        else if (image == the_image) {
+            return;
+        }
+        //  warning ("%s :image:%lx pixbuf:%lx type:%s", name
+        //      , (long)image
+        //      , (long)image.pixbuf
+        //      , image.get_storage_type ().to_string ());
+        //  image.notify["gicon"].connect (()=> {
+        //      warning ("change gcion");
+        //  });
+
         if (the_image != null) {
             remove (the_image);
             the_image.get_style_context ().remove_class ("composited-indicator");
         }
-        if (image == null) {
-            return;
-        }
-
         // Workaround for buggy indicators: Some widgets may still be part of a previous entry
         // if their old parent hasn't been removed from the panel yet.
         var parent = image.parent;
@@ -84,14 +99,18 @@ public class AyatanaCompatibility.IndicatorIcon : Gtk.Box {
     }
 
     public void set_label (Gtk.Label ?label) {
+        // clear old label firstly;
         if (the_label != null) {
             remove (the_label);
             the_label.get_style_context ().remove_class ("composited-indicator");
         }
+
         if (label == null) {
             return;
         }
-
+        else if (label == the_label) {
+            return;
+        }
         // Workaround for buggy indicators: Some widgets may still be part of a previous entry
         // if their old parent hasn't been removed from the panel yet.
         var parent = label.parent;
