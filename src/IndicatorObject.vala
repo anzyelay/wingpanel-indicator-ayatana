@@ -68,9 +68,10 @@ public class AyatanaCompatibility.IndicatorObject : Object, IndicatorIface {
         var entry_widget = entries.get (entry);
 
         if (entry_widget != null) {
+            entries.unset (entry);
+
             entry_widget.clear_entry ();
             entry_removed (entry_widget);
-            entries.unset (entry);
         } else {
             warning ("Could not remove panel entry for %s (%s). No entry found.", name, entry.name_hint);
         }
