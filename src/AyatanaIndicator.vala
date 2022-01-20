@@ -66,40 +66,24 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         if (entry.menu.get_attach_widget () != null) {
             entry.menu.detach ();
         }
-
+        warning ("new a entry :%s", name_hint);
         this.visible = true;
     }
 
     public override Gtk.Widget get_display_widget () {
 		//show an icon in the panel
         if (icon == null) {
-            icon = new IndicatorButton ();
+            warning ("========%s:get display icon", name_hint ());
+            icon = new IndicatorButton (name_hint ());
 
-            var image = entry.image as Gtk.Image;
+            update_icon ();
 
-            if (image != null) {
-                /*
-                 * images holding pixbufs are quite frequently way too large, so we whenever a pixbuf
-                 * is assigned to an image we need to check whether this pixbuf is within reasonable size
-                 */
-                if (image.storage_type == Gtk.ImageType.PIXBUF) {
-                    image.notify["pixbuf"].connect (() => {
-                        ensure_max_size (image);
-                    });
-
-                    ensure_max_size (image);
+            parent_object.show_now_changed.connect ((e)=>{
+                if (e==entry) {
+                    warning ("%s update ...............", e.name_hint);
+                    update_icon ();
                 }
-
-                image.pixel_size = MAX_ICON_SIZE;
-
-                icon.set_widget (IndicatorButton.WidgetSlot.IMAGE, image);
-            }
-
-            var label = entry.label;
-
-            if (label != null && label is Gtk.Label) {
-                icon.set_widget (IndicatorButton.WidgetSlot.LABEL, label);
-            }
+            });
 
             icon.scroll_event.connect (on_scroll);
             icon.button_press_event.connect (on_button_press);
@@ -108,17 +92,32 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         return icon;
     }
 
+    private void update_icon () {
+        var image = entry.image as Gtk.Image;
+        if (image != null) {
+            warning ("%s :image:%lx pixbuf:%lx type%d", name_hint ()
+                        , (long)image
+                        , (long)image.pixbuf
+                        , image.get_storage_type ());
+            icon.set_image (image);
+        }
+        //  icon.set_label (entry.label);
+    }
+
     public string name_hint () {
         return entry_name_hint;
     }
 
     public bool on_button_press (Gdk.EventButton event) {
+
         if (event.button == Gdk.BUTTON_MIDDLE) {
             parent_object.secondary_activate (entry, event.time);
+            update_entry_menu_with_delay (150);
             return Gdk.EVENT_STOP;
         }
         else if (event.button == Gdk.BUTTON_PRIMARY) {
             entry.parent_object.entry_activate (entry, event.time);
+            update_entry_menu_with_delay (150);
             return Gdk.EVENT_STOP;
         }
 
@@ -138,16 +137,26 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     
     public void clear_entry () {
         entry_is_null = true;
+        warning ("delete a entry :%s", name_hint ());
+        close ();
     }
 
-    private void update_entry_menu () {
-        if (!entry_is_null) {
-            entry.menu.popup_at_widget(icon.parent,0,0);
-            entry.menu.popdown ();
+    private void update_entry_menu_with_delay (uint delay = 0) {
+        if (delay==0) {
+            if (!entry_is_null) {
+                entry.menu.popup_at_widget(icon.parent,0,0);
+                entry.menu.popdown ();
+            }
+            else {
+                close ();
+            }
+            return;
         }
-        else {
-            close ();
-        }
+
+        GLib.Timeout.add (delay, ()=>{
+            update_entry_menu_with_delay (0);
+            return false;
+        });
     }
 
     public override Gtk.Widget? get_widget () {
@@ -161,7 +170,8 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
                      */
                     reloaded = true;
                     //show underlying menu (debug)
-                    update_entry_menu ();
+                    update_entry_menu_with_delay ();
+                    warning ("%s: update menu", name_hint ());
                 }
 
                 return Gdk.EVENT_PROPAGATE;
@@ -207,7 +217,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     private void on_menu_widget_insert (Gtk.Widget item,
                                         Gtk.Container container,
                                         Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap) {
-        if (hashmap.get (item)!=null) {
+        if (hashmap.has_key (item)) {
             warning ("has been inserted before");
             return;
         }
@@ -222,23 +232,44 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             } else {
                 w.show ();
             }
-            //  warning ("insert %s", ((Gtk.MenuItem)item).label);
         }
     }
 
     private void on_menu_widget_remove (Gtk.Widget item, 
                                         Gtk.Container container,
                                         Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap) {
-        var w = hashmap.get (item);
+        if (!hashmap.has_key (item)) {
+            warning ("the removing item (%s) are not found!!", ((Gtk.MenuItem)item).get_label ());
+            return;
+        }
+        Gtk.Widget w = null;
 
-        if (w != null) {
+        if (hashmap.unset (item, out w)) {
             //  warning ("------------remove a item: %s --> widget: %s", ((Gtk.MenuItem)item).get_label (), w.get_type ().name ());
             container.remove (w);
-            hashmap.unset (item);
         }
-        else {
-            warning ("the removing item (%s) are not found!!", ((Gtk.MenuItem)item).get_label ());
+    }
+
+    private void test (Gtk.Container container) {
+        if (container.get_children ().length () == 2) {
+            int num = 0;
+            MenuButton ?back = null;
+            foreach (var it in container.get_children ()) {
+                if (it is MenuButton) {
+                    num++;
+                    if ( ((MenuButton)it).label == _("BACK")) {
+                        back = it as MenuButton;
+                    }
+                }
+            }    
+            if (num==1 && back != null) {
+                if (main_stack.visible_child == container) {
+                    warning ("find back button");
+                    back.clicked ();
+                }
+            }
         }
+
     }
 
     private Gtk.Image? check_for_image (Gtk.Widget widget) {
@@ -255,7 +286,8 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         return null;
     }
 
-    private void connect_signals (Gtk.Widget item, Gtk.Widget button) {
+    private void connect_signals (Gtk.MenuItem item, Gtk.Widget button) {
+        warning ("connect %s,item(%lx)---%lx", item.label, (long)item, (long)button);
         item.show.connect (() => {
             button.no_show_all = false;
             button.show ();
@@ -267,17 +299,19 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 		item.state_flags_changed.connect ((type) => {
            button.set_state_flags (item.get_state_flags (),true);
         });
-        if (item is Gtk.MenuItem) {
-            ((Gtk.MenuItem)item).notify["label"].connect (() => {
-                var label = ((Gtk.MenuItem)item).get_label ().replace ("_", "");
-                if ( button is MenuButton ) {
-                    ((MenuButton)button).label = label;
-                }
-                else {
-                    warning ("========label should be changed to %s=========", label);
-                }
-            });
+        if (item is Gtk.SeparatorMenuItem) {
+            return;
         }
+        item.notify["label"].connect (() => {
+            var label = item.get_label ().replace ("_", "");
+            warning ("label changed to %s  item:%lx, button:%lx"
+                        , label
+                        , (long)item
+                        , (long)button);
+            if ( button is MenuButton ) {
+                ((MenuButton)button).label = label;
+            }
+        });
     }
 
     /* convert the menuitems to widgets that can be shown in popovers */
@@ -413,11 +447,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         new_button.set_state_flags (state, true);
         new_button.clicked.connect (()=>{
             item.activate ();
-            GLib.Timeout.add (150, ()=>{
-                update_entry_menu ();
-                return false;
-            });
-            //  close ();
+            update_entry_menu_with_delay (150);
         });
         connect_signals (item, new_button);
 
@@ -438,14 +468,4 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     public override void closed () {
     }
 
-    private void ensure_max_size (Gtk.Image image) {
-        var pixbuf = image.pixbuf;
-
-        if (pixbuf != null && pixbuf.get_height () != MAX_ICON_SIZE) {
-			//scale_simple(dest_width,dest_height,interp)
-            image.pixbuf = pixbuf.scale_simple (
-                (int)((double)MAX_ICON_SIZE / pixbuf.get_height () * pixbuf.get_width ()),
-            	MAX_ICON_SIZE, Gdk.InterpType.HYPER);
-        }
-    }
 }

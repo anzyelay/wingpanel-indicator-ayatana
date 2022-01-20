@@ -1,3 +1,15 @@
+wingpanel-indicator-ayatana (2.1.2ubuntu1) unstable; urgency=medium
+
+  * fix indicatorgrid cant remove widget bz of inner grid exist] 
+
+ -- leixiaoan <leixa@jideos.com>  Tue, 18 Jan 2022 19:51:27 +0800
+
+wingpanel-indicator-ayatana (2.1.2) unstable; urgency=medium
+
+  * fix fcitx pixmap disappear on wingpanel 
+
+ -- leixiaoan <leixa@jideos.com>  Mon, 17 Jan 2022 20:54:10 +0800
+
 wingpanel-indicator-ayatana (2.1.1) unstable; urgency=medium
   * fix bug:wingpanel crash while click quit or restart item,click-not-close-window
   * fix a bug:cant remove a exist item

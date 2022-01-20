@@ -16,15 +16,13 @@
  */
 
 public class AyatanaCompatibility.IndicatorButton : Gtk.Box {
-    public enum WidgetSlot {
-        LABEL,
-        IMAGE
-    }
+    const int MAX_ICON_SIZE = 20;
 
-    private Gtk.Widget the_label;
-    private Gtk.Widget the_image;
+    private Gtk.Label the_label;
+    private Gtk.Image the_image;
 
-    public IndicatorButton () {
+    public IndicatorButton (string ?name = null) {
+        this.name = name;
         set_orientation (Gtk.Orientation.HORIZONTAL);
         set_homogeneous (false);
 
@@ -41,34 +39,70 @@ public class AyatanaCompatibility.IndicatorButton : Gtk.Box {
         style.add_class ("ayatana-indicator");
     }
 
-    public void set_widget (WidgetSlot slot, Gtk.Widget widget) {
-        Gtk.Widget old_widget = null;
+    private void ensure_max_size (Gtk.Image image) {
+        var pixbuf = image.pixbuf;
 
-        if (slot == WidgetSlot.LABEL)
-            old_widget = the_label;
-        else if (slot == WidgetSlot.IMAGE)
-            old_widget = the_image;
+        if (pixbuf != null && pixbuf.get_height () > MAX_ICON_SIZE) {
+			//scale_simple(dest_width,dest_height,interp)
+            image.pixbuf = pixbuf.scale_simple (
+                (int)((double)MAX_ICON_SIZE / pixbuf.get_height () * pixbuf.get_width ()),
+            	MAX_ICON_SIZE, Gdk.InterpType.HYPER);
+        }
+    }
 
-        if (old_widget != null) {
-            remove (old_widget);
-            old_widget.get_style_context ().remove_class ("composited-indicator");
+    public void set_image (Gtk.Image ?image) {
+        if (the_image != null) {
+            remove (the_image);
+            the_image.get_style_context ().remove_class ("composited-indicator");
+        }
+        if (image == null) {
+            return;
         }
 
         // Workaround for buggy indicators: Some widgets may still be part of a previous entry
         // if their old parent hasn't been removed from the panel yet.
-        var parent = widget.parent;
+        var parent = image.parent;
+        if (parent != null) {
+            parent.remove (image);
+        }
+        image.get_style_context ().add_class ("composited-indicator");
+        /*
+        * images holding pixbufs are quite frequently way too large, so we whenever a pixbuf
+        * is assigned to an image we need to check whether this pixbuf is within reasonable size
+        */
+        if (image.storage_type == Gtk.ImageType.PIXBUF ) {
+            image.notify["pixbuf"].connect (() => {
+                ensure_max_size (image);
+                warning ("pixbuf update  %s", name);
+            });
+            ensure_max_size (image);
+        }
+        image.pixel_size = MAX_ICON_SIZE;
+
+        the_image = image;
+        pack_start (the_image, false, false, 0);
+
+    }
+
+    public void set_label (Gtk.Label ?label) {
+        if (the_label != null) {
+            remove (the_label);
+            the_label.get_style_context ().remove_class ("composited-indicator");
+        }
+        if (label == null) {
+            return;
+        }
+
+        // Workaround for buggy indicators: Some widgets may still be part of a previous entry
+        // if their old parent hasn't been removed from the panel yet.
+        var parent = label.parent;
         if (parent != null)
-            parent.remove (widget);
+            parent.remove (label);
 
-        widget.get_style_context ().add_class ("composited-indicator");
+        label.get_style_context ().add_class ("composited-indicator");
 
-        if (slot == WidgetSlot.LABEL) {
-            the_label = widget;
-            pack_end (the_label, false, false, 0);
-        } else if (slot == WidgetSlot.IMAGE) {
-            the_image = widget;
-            pack_start (the_image, false, false, 0);
-        } 
+        the_label = label;
+        pack_end (the_label, false, false, 0);
     }
 }
 
