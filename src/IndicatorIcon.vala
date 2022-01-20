@@ -15,13 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class AyatanaCompatibility.IndicatorButton : Gtk.Box {
+public class AyatanaCompatibility.IndicatorIcon : Gtk.Box {
     const int MAX_ICON_SIZE = 20;
 
     private Gtk.Label the_label;
     private Gtk.Image the_image;
 
-    public IndicatorButton (string ?name = null) {
+    public IndicatorIcon (string ?name = null) {
         this.name = name;
         set_orientation (Gtk.Orientation.HORIZONTAL);
         set_homogeneous (false);

@@ -18,7 +18,7 @@
  */
 
 public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
-    private IndicatorButton icon;
+    private IndicatorIcon icon;
 
     private Gtk.Stack main_stack;
     private MenuGrid main_grid;
@@ -73,7 +73,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     public override Gtk.Widget get_display_widget () {
 		//show an icon in the panel
         if (icon == null) {
-            icon = new IndicatorButton (name_hint ());
+            icon = new IndicatorIcon (name_hint ());
 
             update_icon ();
 
