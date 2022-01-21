@@ -175,10 +175,9 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             main_stack = new Gtk.Stack () {
                 vhomogeneous = false
             };
-            main_grid = new MenuGrid ();
-            menu_layout_parse (entry.menu, main_grid, menu_map);
+            main_grid = menu_layout_parse (entry.menu);
+            main_grid.show_all ();
             main_stack.add (main_grid);
-            main_stack.show_all();
 
             main_stack.map.connect (() => {
 				//reload: open first on main_list
@@ -195,12 +194,32 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         return main_stack;
     }
 
-    private void menu_layout_parse (Gtk.Menu menu, 
-                                        Gtk.Container container=main_grid,
+    private MenuGrid menu_layout_parse (Gtk.Menu menu, Gtk.Container ?upper_grid = null,
                                         Gee.HashMap<Gtk.Widget, Gtk.Widget> hashmap=menu_map) {
+        
+        if (hashmap.has_key (menu)) { 
+            return hashmap.get (menu) as MenuGrid;
+        }
+        // create a new menu grid
+        var container = new MenuGrid ();
+
+        if (upper_grid != null) {
+            var btn_back = new MenuButton (_("BACK"), Gtk.ArrowType.LEFT);
+            container.add (btn_back);
+            container.add (new Separator ());
+
+            btn_back.clicked.connect(()=>{
+                alter_display_page (upper_grid);
+                main_stack.remove (container);
+            });
+        }
+
         foreach (var item in menu.get_children ()) {
             on_menu_widget_insert (item, container, hashmap);
         }
+
+        hashmap.set (menu, container);
+
         menu.insert.connect ((e)=>{
             if (entry_is_null) {
                 return;
@@ -211,9 +230,19 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             if (entry_is_null) {
                 return;
             }
-            //  print ("menu(%lx) remove %s(%lx)\n", (long)menu, ((Gtk.MenuItem)e).label, (long)e);
-            on_menu_widget_remove (e, container, hashmap);
+            if (!on_menu_widget_remove (e, container, hashmap)) {
+                return;
+            }
+            if (upper_grid != null) { // avoid upper grid be removed
+                if (container == main_stack.visible_child && container.get_children ().length () == 2) {
+                    hashmap.unset (menu);
+                    alter_display_page (upper_grid);
+                    main_stack.remove (container);
+                }
+            }
         });
+
+        return container;
     }
 
     private void on_menu_widget_insert (Gtk.Widget item,
@@ -237,19 +266,21 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         }
     }
 
-    private void on_menu_widget_remove (Gtk.Widget item, 
+    private bool on_menu_widget_remove (Gtk.Widget item, 
                                         Gtk.Container container,
                                         Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap) {
         if (!hashmap.has_key (item)) {
             warning ("the removing item (%s) are not found!!", ((Gtk.MenuItem)item).get_label ());
-            return;
+            return false;
         }
         Gtk.Widget w = null;
 
         if (hashmap.unset (item, out w)) {
             //  warning ("------------remove a item: %s --> widget: %s", ((Gtk.MenuItem)item).get_label (), w.get_type ().name ());
             container.remove (w);
+            return true;
         }
+        return false;
     }
 
     private Gtk.Image? check_for_image (Gtk.Widget widget) {
@@ -364,24 +395,16 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             //  warning ("is sub menu item");
             var submenu = ((Gtk.MenuItem)item).submenu;
             if (submenu!=null) {
-                var child_grid = new MenuGrid ();
-                //back btn
-				var btn_back = new MenuButton (_("BACK"), Gtk.ArrowType.LEFT);
-				btn_back.clicked.connect(()=>{
-                    alter_display_page (container);
-				});
-				child_grid.add (btn_back);
-				child_grid.add (new Separator ());
-                //convert
-                menu_layout_parse (submenu, child_grid, menu_map);
-
-                main_stack.add (child_grid);
-                
                 //forward btn
                 var button = new MenuButton (label, Gtk.ArrowType.RIGHT);
                 button.set_state_flags (state, true);
                 button.clicked.connect (() => {
-                    //  item.activate ();
+                    //convert
+                    var child_grid = menu_layout_parse (submenu, container, menu_map);
+                    child_grid.show_all ();
+
+                    main_stack.add (child_grid);
+
                     alter_display_page (child_grid);
                 });
                 connect_signals (item, button);
