@@ -67,6 +67,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             entry.menu.detach ();
         }
 
+        //  warning ("new a entry :%s (%lx)", name_hint, (long)entry);
         this.visible = true;
     }
 
@@ -91,10 +92,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     }
 
     private void update_icon () {
-        var image = entry.image as Gtk.Image;
-        if (image != null) {
-            icon.set_image (image);
-        }
+        icon.set_image (entry.image);
         //  icon.set_label (entry.label);
     }
 
@@ -130,7 +128,12 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     }
     
     public void clear_entry () {
+        //  warning ("delete a entry :%s (%lx), menu(%lx)", name_hint (), (long)entry, (long)entry.menu);
         entry_is_null = true;
+        if (entry.menu != null) {
+            //  entry.menu.destroy ();
+            entry.menu = null;
+        }
         main_stack.hide ();
     }
 
@@ -198,11 +201,17 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         foreach (var item in menu.get_children ()) {
             on_menu_widget_insert (item, container, hashmap);
         }
-
         menu.insert.connect ((e)=>{
+            if (entry_is_null) {
+                return;
+            }
             on_menu_widget_insert (e, container, hashmap);
         });
         menu.remove.connect ( (e)=>{
+            if (entry_is_null) {
+                return;
+            }
+            //  print ("menu(%lx) remove %s(%lx)\n", (long)menu, ((Gtk.MenuItem)e).label, (long)e);
             on_menu_widget_remove (e, container, hashmap);
         });
     }
@@ -258,6 +267,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     }
 
     private void connect_signals (Gtk.MenuItem item, Gtk.Widget button) {
+        //  print ("connect %s,item(%lx)---%lx\n", item.label, (long)item, (long)button);
         item.show.connect (() => {
             button.no_show_all = false;
             button.show ();
@@ -272,12 +282,13 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         if (item is Gtk.SeparatorMenuItem) {
             return;
         }
-        item.notify["label"].connect (() => {
-            var label = item.get_label ().replace ("_", "");
-            if ( button is MenuButton ) {
-                ((MenuButton)button).label = label;
-            }
-        });
+        var menubutton = button as MenuButton;
+        if (menubutton != null) {
+            item.notify["label"].connect (() => {
+                var label = item.get_label ().replace ("_", "");
+                menubutton.label = label;
+            });
+        }
     }
 
     /* convert the menuitems to widgets that can be shown in popovers */
