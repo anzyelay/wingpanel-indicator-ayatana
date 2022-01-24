@@ -204,7 +204,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         var container = new MenuGrid ();
 
         if (upper_grid != null) {
-            var btn_back = new MenuButton (_("BACK"), Gtk.ArrowType.LEFT);
+            var btn_back = new MenuButton (_("go back"), Gtk.ArrowType.LEFT);
             container.add (btn_back);
             container.add (new Separator ());
 
@@ -220,12 +220,25 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
 
         hashmap.set (menu, container);
 
+        int insert_num = 0;
         menu.insert.connect ((e)=>{
             if (entry_is_null) {
                 return;
             }
-            on_menu_widget_insert (e, container, hashmap);
+            if (!on_menu_widget_insert (e, container, hashmap)) {
+                return;
+            }
+            //make container list right sort after inserting
+            if ( (insert_num ++) == 0) {
+                Timeout.add (10, ()=>{
+                    if (--insert_num > 0)
+                        return true;
+                    menu_list_adjust_sort (menu, container, hashmap);
+                    return false;
+                });
+            }
         });
+
         menu.remove.connect ( (e)=>{
             if (entry_is_null) {
                 return;
@@ -245,12 +258,32 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         return container;
     }
 
-    private void on_menu_widget_insert (Gtk.Widget item,
+    private void menu_list_adjust_sort (Gtk.Menu menu,
+                                        Gtk.Container container,
+                                        Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap) {
+
+        foreach (var item in menu.get_children ()) {
+            var w = hashmap.get (item);
+            if (w != null) {
+                container.remove (w);
+            }
+        }
+
+        foreach (var item in menu.get_children ()) {
+            var w = hashmap.get (item);
+            if (w != null) {
+                container.add (w);
+            }
+        }
+
+    }
+
+    private bool on_menu_widget_insert (Gtk.Widget item,
                                         Gtk.Container container,
                                         Gee.HashMap<Gtk.Widget, Gtk.Widget>  hashmap) {
         if (hashmap.has_key (item)) {
             warning ("has been inserted before");
-            return;
+            return false;
         }
         var w = convert_menu_widget (item, container);
         if (w != null) {
@@ -263,7 +296,9 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             } else {
                 w.show ();
             }
+            return true;
         }
+        return false;
     }
 
     private bool on_menu_widget_remove (Gtk.Widget item, 
