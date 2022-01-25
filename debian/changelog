@@ -1,3 +1,10 @@
+wingpanel-indicator-ayatana (2.1.2ubuntu7) unstable; urgency=medium
+
+  * fix wingpanel dependency error
+  * modify readme 
+
+ -- leixiaoan <leixa@jideos.com>  Tue, 25 Jan 2022 17:32:11 +0800
+
 wingpanel-indicator-ayatana (2.1.2ubuntu6) unstable; urgency=medium
 
   * add image to every menu item if exist 
