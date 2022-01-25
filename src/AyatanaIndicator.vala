@@ -392,6 +392,12 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         if (item_role != Atk.Role.RADIO_MENU_ITEM) {
             group_radio = null;
         } 
+        /* detect if it has a image */
+        Gtk.Image? image = null;
+        var child = ((Gtk.Bin)item).get_child ();
+        if (child != null) {
+            image = check_for_image (child);
+        }
 
         //  warning ("%s   %s    %d", item.get_type ().name (), item_role.get_name (), item_role);
         MenuButton ?new_button = null;
@@ -454,31 +460,10 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             return null;
 
         }
-        /* detect if it has a image */
-        Gtk.Image? image = null;
-        var child = ((Gtk.Bin)item).get_child ();
-        if (child != null) {
-            image = check_for_image (child);
-            if (image != null && image.pixbuf == null && image.icon_name != null) {
-                try {
-                    Gtk.IconTheme icon_theme = Gtk.IconTheme.get_default ();
-                    image.pixbuf = icon_theme.load_icon (image.icon_name, 16, 0);
-                } catch (Error e) {
-                    warning (e.message);
-                }
-            }
-			if (image != null && image.pixbuf != null) {
-				//  var img= new Gtk.Image.from_pixbuf(image.pixbuf);
-                //  var hbox = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 3);
-                //  hbox.set_hexpand (true);
-                //  hbox.set_vexpand (false);
-                //  hbox.add(img);
-                //  hbox.add(model_button);
-                //  return hbox;
-                //  model_button.icon = image.pixbuf;
-            } 
-        }
 
+        if (image != null) {
+            new_button.image = image;
+        }
         new_button.set_state_flags (state, true);
         new_button.clicked.connect (()=>{
             item.activate ();

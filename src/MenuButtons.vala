@@ -78,7 +78,33 @@ namespace AyatanaCompatibility {
 
         public new Gtk.Image image {
             set {
-                _image = value;
+                if (value.storage_type == Gtk.ImageType.PIXBUF) {
+                    _image.pixbuf = value.pixbuf;
+                    value.notify["pixbuf"].connect (()=>{
+                        _image.pixbuf = value.pixbuf;
+                    });
+                }
+                else if (value.storage_type == Gtk.ImageType.ICON_NAME) {
+                    try {
+                        _image.pixbuf = Gtk.IconTheme.get_default ().load_icon (value.icon_name, 16, 0);
+                    } catch (Error e) {}
+                    value.notify["icon-name"].connect ((e)=>{
+                        if (value.icon_name == null) {
+                            return ;
+                        }
+                        try {
+                            _image.pixbuf = Gtk.IconTheme.get_default ().load_icon (value.icon_name, 16, 0);
+                        } catch (Error e) {
+                            warning (e.message);
+                        }
+                    });
+                }
+                else {
+                    _image = value;
+                }
+            }
+            get {
+                return _image;
             }
         }
 
@@ -118,6 +144,19 @@ namespace AyatanaCompatibility {
 
             add (box);
             show_all ();
+
+            _image.notify["pixbuf"].connect ( ()=>{
+                if (_image.pixbuf == null) {
+                    return;
+                } 
+                const int max_icon_size = 16;
+                var pixbuf = _image.pixbuf;
+                if (pixbuf != null && pixbuf.get_height () > max_icon_size) {
+                    _image.pixbuf = pixbuf.scale_simple (
+                        (int)((double)max_icon_size / pixbuf.get_height () * pixbuf.get_width ()),
+                        max_icon_size, Gdk.InterpType.HYPER);
+                }
+            });
         }
 
     }
