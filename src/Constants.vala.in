@@ -8,6 +8,7 @@ namespace Constants {
 	public const string INDICATOR_NAME          = @INDICATOR_NAME@;
     public const string DATA_DIR                = @DATA_DIR@;
     public const string GETTEXT_PACKAGE         = @GETTEXT_PACKAGE@;
+    public const string LOCALEDIR               = @LOCALEDIR@;
 
     public const string WINGPANEL_INDICATOR_DIR = @WINGPANEL_INDICATOR_DIR@;
     public const string AYATANA_INDICATOR_DIR   = @AYATANA_INDICATOR_DIR@;

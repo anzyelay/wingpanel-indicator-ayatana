@@ -26,6 +26,9 @@ public class AyatanaCompatibility.MetaIndicator : Wingpanel.Indicator {
     public MetaIndicator () {
         Object (code_name: "ayatana_compatibility");
 
+        GLib.Intl.bindtextdomain (Constants.GETTEXT_PACKAGE, Constants.LOCALEDIR);
+        GLib.Intl.bind_textdomain_codeset (Constants.GETTEXT_PACKAGE, "UTF-8");
+        
         deferred_indicators = new Gee.LinkedList<AyatanaCompatibility.Indicator>();
 
         load_blacklist ();
