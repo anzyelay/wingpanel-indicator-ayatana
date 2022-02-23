@@ -30,7 +30,7 @@ namespace AyatanaCompatibility {
         """;
     const string grid_css = """
         grid {
-            background-color: rgba(255, 255, 255, 0.7);
+            background-color: rgba(255, 255, 255, 0.92);
             border-radius: 6px;
             box-shadow: inset 0 20px 30px -1px rgba(0, 0, 0, 0.1);
             padding: 4px;
