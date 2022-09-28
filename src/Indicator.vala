@@ -17,21 +17,24 @@
 
 public class AyatanaCompatibility.MetaIndicator : Wingpanel.Indicator {
     private Gee.HashSet<string> blacklist;
+    private Gee.HashSet<string> toggle_item_blacklist;
     private IndicatorFactory indicator_loader;
 
     private Gee.LinkedList<AyatanaCompatibility.Indicator> deferred_indicators;
     private bool wingpanel_defer_register = true;
     private bool wingpanel_defer_waiting = false;
+    private GLib.Settings settings;
 
     public MetaIndicator () {
         Object (code_name: "ayatana_compatibility");
 
         GLib.Intl.bindtextdomain (Constants.GETTEXT_PACKAGE, Constants.LOCALEDIR);
         GLib.Intl.bind_textdomain_codeset (Constants.GETTEXT_PACKAGE, "UTF-8");
-        
+
         deferred_indicators = new Gee.LinkedList<AyatanaCompatibility.Indicator>();
 
         load_blacklist ();
+
         indicator_loader = new IndicatorFactory ();
 
         this.visible = false;
@@ -60,6 +63,10 @@ public class AyatanaCompatibility.MetaIndicator : Wingpanel.Indicator {
     private void create_entry (Indicator indicator) {
         if (blacklist.contains (indicator.name_hint ())) {
             return;
+        }
+        
+        if (toggle_item_blacklist.contains (indicator.name_hint ())) {
+            indicator.toggle_item = false;
         }
 
         if (wingpanel_defer_register) {
@@ -122,33 +129,31 @@ public class AyatanaCompatibility.MetaIndicator : Wingpanel.Indicator {
     }
 
     private void load_blacklist () {
+        settings = new GLib.Settings ("com.patapua.wingpanel.ayatana");
         blacklist = new Gee.HashSet<string> ();
-        var blacklist_file = File.new_for_path ("/etc/wingpanel.d/ayatana.blacklist");
-        foreach (var entry in get_restrictions_from_file (blacklist_file)) {
-            blacklist.add (entry);
+        toggle_item_blacklist = new Gee.HashSet<string> ();
+        foreach (var child in settings.get_strv ("blacklist")) {
+            blacklist.add (child);
         }
-        blacklist.add("nm-applet"); //old network indicator (duplicate)
-    }
+        foreach (var child in settings.get_strv ("toggle-item-blacklist")) {
+            toggle_item_blacklist.add (child);
+        }
 
-    private string[] get_restrictions_from_file (File file) {
-        var restrictions = new string[] {};
-
-        if (file.query_exists ()) {
-            try {
-                var dis = new DataInputStream (file.read ());
-                string? line = null;
-
-                while ((line = dis.read_line ()) != null) {
-                    if (line.strip () != "") {
-                        restrictions += line;
-                    }
+        settings.changed.connect ((key)=>{
+            if ("blacklist" == key) {
+                blacklist.clear ();
+                foreach (var child in settings.get_strv ("blacklist")) {
+                    blacklist.add (child);
                 }
-            } catch (Error error) {
-                warning ("Unable to load restrictions file %s: %s\n", file.get_basename (), error.message);
             }
-        }
+            else if ("toggle-item-blacklist" == key) {
+                toggle_item_blacklist.clear ();
+                foreach (var child in settings.get_strv ("toggle-item-blacklist")) {
+                    toggle_item_blacklist.add (child);
+                }
+            }
+        });
 
-        return restrictions;
     }
 
 }

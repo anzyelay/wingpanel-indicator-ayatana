@@ -23,6 +23,8 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
     private Gtk.Stack main_stack;
     private MenuGrid main_grid;
 
+    public bool toggle_item { get; set; default = true;}
+
     private unowned IndicatorAyatana.ObjectEntry entry;
     private unowned IndicatorAyatana.Object parent_object;
     private IndicatorIface indicator;
@@ -67,7 +69,7 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
             entry.menu.detach ();
         }
 
-        //  warning ("new a entry :%s (%lx)", name_hint, (long)entry);
+        debug ("new a entry :%s (%lx)", name_hint, (long)entry);
         this.visible = true;
     }
 
@@ -467,7 +469,12 @@ public class AyatanaCompatibility.Indicator : Wingpanel.Indicator {
         new_button.set_state_flags (state, true);
         new_button.clicked.connect (()=>{
             item.activate ();
-            update_entry_menu_with_delay (150);
+            if (toggle_item) {
+                close ();
+            }
+            else {
+                update_entry_menu_with_delay (150);
+            }
         });
         connect_signals (item, new_button);
 

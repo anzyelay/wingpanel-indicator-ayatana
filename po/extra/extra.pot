@@ -1,0 +1,39 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the extra package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: extra\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-09-28 18:15+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: data/my.gschema.xml.in:6
+msgid "Ayatana tray icon blacklist"
+msgstr ""
+
+#: data/my.gschema.xml.in:7
+msgid ""
+"The tray icon in the blacklist will be hidden on the system tray panel. "
+"Restart the relative app or wingpanel to update."
+msgstr ""
+
+#: data/my.gschema.xml.in:15
+msgid "Blacklist of menu widget,in which item is a toggle"
+msgstr ""
+
+#: data/my.gschema.xml.in:16
+msgid ""
+"For the menu popup at tray icons included by blacklist, it would not "
+"immediately close when you click its item, unless you click elsewhere. "
+"Restart the relative app or wingpanel to update."
+msgstr ""

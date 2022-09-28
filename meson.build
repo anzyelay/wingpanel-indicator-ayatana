@@ -45,20 +45,20 @@ gettext_name = indicator_name + '-indicator'
 add_global_arguments('-DGETTEXT_PACKAGE="@0@"'.format(gettext_name),
                      language: 'c')
 # ----------------------------------------------------------------------------------------------------------------------
-# Generated constants:
+# Generated conf_data:
 
-constants = configuration_data()
-constants.set_quoted('WINGPANEL_INDICATOR_DIR', join_paths(get_option('prefix'), indicator_dir))
-constants.set_quoted('AYATANA_INDICATOR_DIR',   dependencies['indicator3'].get_pkgconfig_variable('indicatordir'))
-constants.set_quoted('INDICATOR_NAME',          indicator_name)
-constants.set_quoted('DATA_DIR',                join_paths(get_option('prefix'), get_option('datadir')))
-constants.set_quoted('GETTEXT_PACKAGE',         gettext_name)
-constants.set_quoted('LOCALEDIR',               join_paths(get_option('prefix'), get_option('localedir')))
+conf_data = configuration_data()
+conf_data.set_quoted('WINGPANEL_INDICATOR_DIR', join_paths(get_option('prefix'), indicator_dir))
+conf_data.set_quoted('AYATANA_INDICATOR_DIR',   dependencies['indicator3'].get_pkgconfig_variable('indicatordir'))
+conf_data.set_quoted('INDICATOR_NAME',          indicator_name)
+conf_data.set_quoted('DATA_DIR',                join_paths(get_option('prefix'), get_option('datadir')))
+conf_data.set_quoted('GETTEXT_PACKAGE',         gettext_name)
+conf_data.set_quoted('LOCALEDIR',               join_paths(get_option('prefix'), get_option('localedir')))
 
-constants_file = configure_file(
+conf_data_file = configure_file(
     input: 'src/Constants.vala.in',
     output: 'Constants.vala',
-    configuration: constants
+    configuration: conf_data
 )
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ shared_module(
     indicator_name,
 
     sources,
-    constants_file,
+    conf_data_file,
 
     dependencies: deps,
 
@@ -83,3 +83,6 @@ shared_module(
 
 
 subdir('po')
+subdir('data')
+
+meson.add_install_script('meson/post_install.py')

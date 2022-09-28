@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<schemalist>
+    <schema path="/com/patapua/wingpanel/ayatana/" id="com.patapua.wingpanel.ayatana">
+        <key name="blacklist" type="as">
+            <default>['nm-applet']</default>
+            <summary>Ayatana tray icon blacklist</summary>
+            <description>
+                The tray icon in the blacklist will be hidden on the system tray panel.
+                Restart the relative app or wingpanel to update.
+            </description>
+        </key>
+
+        <key name="toggle-item-blacklist" type="as">
+            <default>[]</default>
+            <summary>Blacklist of menu widget,in which item is a toggle</summary>
+            <description>
+                For the menu popup at tray icons included by blacklist,
+                it would not immediately close when you click its item, 
+                unless you click elsewhere.
+                Restart the relative app or wingpanel to update.
+            </description>
+        </key>
+
+    </schema>
+</schemalist>
