@@ -127,7 +127,9 @@ namespace AyatanaCompatibility {
         public MenuButton (string label, Gtk.ArrowType arrow_type = Gtk.ArrowType.NONE) {
             hexpand = true;
 
-            _label = new Gtk.Label (label);
+            _label = new Gtk.Label (label) {
+                ellipsize = Pango.EllipsizeMode.END
+            };
 
             _image = new Gtk.Image ();
             _image.halign = Gtk.Align.END;
